@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
+import InitialSplash from "./pages/InitialSplash";
 import Login from "./pages/Login";
 import Splash from "./pages/Splash";
 import Triage from "./pages/Triage";
@@ -17,14 +18,13 @@ import Dashboard from "./pages/Dashboard";
 import OnlineDoctors from "./pages/OnlineDoctors";
 import Appointments from "./pages/Appointments";
 import Account from "./pages/Account";
-import Sidebar from "@/components/Sidebar";
-
-// ⬇️ NOU
 import DoctorProfile from "./pages/DoctorProfile";
+import HamburgerMenu from "@/components/HamburgerMenu";
 
 const queryClient = new QueryClient();
 
 function AppShell() {
+  const [showInitialSplash, setShowInitialSplash] = useState(true);
   const [user, setUser] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "null");
@@ -37,7 +37,15 @@ function AppShell() {
   const role = isLoggedIn ? user?.role : selectedRole;
 
   const location = useLocation();
-  const hideSidebar = ["/splash", "/triage"].includes(location.pathname); // ascunde sidebar pe onboarding
+  const hideMenu = ["/splash", "/triage", "/"].includes(location.pathname);
+
+  useEffect(() => {
+    // După ce se montează componenta, ascunde splash-ul după verificare
+    const timer = setTimeout(() => {
+      setShowInitialSplash(false);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const syncUser = () => {
@@ -55,9 +63,13 @@ function AppShell() {
     };
   }, []);
 
+  if (showInitialSplash) {
+    return <InitialSplash />;
+  }
+
   return (
-    <div className="flex min-h-screen">
-      {isLoggedIn && !hideSidebar && <Sidebar key={user?.role} role={role} />}
+    <div className="flex min-h-screen w-full">
+      {isLoggedIn && !hideMenu && <HamburgerMenu role={role} />}
       <main className="flex-1 w-full">
         <Routes>
           {/* Public */}

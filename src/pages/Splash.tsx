@@ -24,9 +24,9 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 
 // Grafica & animații
-import LottieHeroStep from "../components/graphics/LottieHeroStep";
-import LottieBadge from "../components/graphics/LottieBadge";
-import AnimatedBlobs from "../components/graphics/AnimatedBlobs";
+import LottieHeroStep from "../components/Graphics/LottieHeroStep";
+import LottieBadge from "../components/Graphics/LottieBadge";
+import AnimatedBlobs from "../components/Graphics/AnimatedBlobs";
 
 // Lottie data – EXACT din src/assets/loottie (nume cu spații)
 import doctorAndHealth from "../assets/loottie/Doctor and health symbols.json";

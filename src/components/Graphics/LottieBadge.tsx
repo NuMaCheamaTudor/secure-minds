@@ -3,18 +3,16 @@ import Lottie from "lottie-react";
 export default function LottieBadge({
   data,
   label,
-  className = "",
 }: {
   data: object;
   label: string;
-  className?: string;
 }) {
   return (
-    <div className={`calm-card p-4 text-center ${className}`}>
-      <div className="mx-auto w-20 h-20">
-        <Lottie animationData={data} loop autoplay />
+    <div className="flex flex-col items-center justify-center gap-2 p-4 bg-card border rounded-xl hover:shadow-soft transition-all">
+      <div className="w-16 h-16">
+        <Lottie animationData={data} loop />
       </div>
-      <div className="text-sm font-medium mt-2">{label}</div>
+      <p className="text-xs text-center text-muted-foreground">{label}</p>
     </div>
   );
 }

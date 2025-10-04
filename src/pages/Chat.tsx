@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Download, AlertCircle } from "lucide-react";
+import { Send, Download, AlertCircle, AlertTriangle } from "lucide-react";
 import SafetyDisclaimer from "@/components/SafetyDisclaimer";
 import RiskBadge from "@/components/RiskBadge";
 import { assessRisk, getEmpathicResponse, RiskAssessment } from "@/lib/safety";
+import { detectEmergency, notifyDoctor, EMERGENCY_AI_RESPONSE } from "@/lib/emergency";
 
 interface Message {
   id: string;
@@ -27,16 +28,20 @@ const MOCK_THERAPIST = {
 
 export default function Chat() {
   const { therapistId } = useParams();
+  const [searchParams] = useSearchParams();
+  const therapistName = searchParams.get("name") || "Dr. Andrei Popescu";
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "system",
-      content: "Salut! Sunt agentul AI al Dr. Andrei Popescu. Sunt aici să te ascult și să te ajut. Tot ce îmi spui este confidențial și în siguranță.",
+      content: `Salut! Sunt agentul AI al ${therapistName}. Sunt aici să te ascult și să te ajut. Tot ce îmi spui este confidențial și în siguranță.`,
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [emergencyDetected, setEmergencyDetected] = useState(false);
   const [currentRisk, setCurrentRisk] = useState<RiskAssessment>({ level: "ok", score: 0, flags: [] });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -55,11 +60,42 @@ export default function Chat() {
       timestamp: new Date(),
     };
 
+    // Detectare urgență
+    const emergency = detectEmergency(input);
+    
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsTyping(true);
 
-    // Assess risk
+    // Dacă e urgență, răspunde imediat și notifică
+    if (emergency.urgent) {
+      setEmergencyDetected(true);
+      notifyDoctor(therapistId || "unknown", emergency.reason || "unknown");
+      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      const emergencyResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content: EMERGENCY_AI_RESPONSE,
+        risk: { level: "critical", score: 10, flags: emergency.matchedKeywords },
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, emergencyResponse]);
+      setIsTyping(false);
+      setCurrentRisk({ level: "critical", score: 10, flags: emergency.matchedKeywords });
+      
+      toast({
+        title: "Urgență detectată",
+        description: "Terapeutul a fost notificat automat. Pentru urgențe imediate, sună 112.",
+        variant: "destructive",
+      });
+      
+      return;
+    }
+
+    // Evaluare risc standard
     const risk = assessRisk(input);
     setCurrentRisk(risk);
 
@@ -115,13 +151,13 @@ export default function Chat() {
               <div className="relative">
                 <img
                   src={MOCK_THERAPIST.image}
-                  alt={MOCK_THERAPIST.name}
+                  alt={therapistName}
                   className="w-12 h-12 rounded-xl object-cover"
                 />
                 <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-card"></span>
               </div>
               <div>
-                <h2 className="font-semibold">{MOCK_THERAPIST.name}</h2>
+                <h2 className="font-semibold">{therapistName}</h2>
                 <p className="text-sm text-muted-foreground">
                   {MOCK_THERAPIST.specialty}
                 </p>
@@ -141,6 +177,17 @@ export default function Chat() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
           <SafetyDisclaimer />
+          
+          {/* Alert urgență */}
+          {emergencyDetected && (
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-red-100 border border-red-300 animate-fade-in">
+              <AlertTriangle className="w-5 h-5 text-red-700 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-red-800">
+                <strong>Urgență detectată!</strong> Terapeutul a fost notificat automat. Pentru urgențe imediate, sună{" "}
+                <strong>112</strong>.
+              </div>
+            </div>
+          )}
 
           {messages.map((message) => (
             <div
