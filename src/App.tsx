@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,41 +13,51 @@ import TherapistDetails from "./pages/TherapistDetails";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorAppointments from "./pages/DoctorAppointments";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/splash" element={<Splash />} />
-          <Route path="/triage" element={<Triage />} />
-          <Route path="/chat/:therapistId" element={<Chat />} />
-          <Route path="/doctor/details" element={<TherapistDetails />} />
-          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-          <Route path="/doctor/appointments" element={<DoctorAppointments />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
 import Dashboard from "./pages/Dashboard";
 import OnlineDoctors from "./pages/OnlineDoctors";
 import Appointments from "./pages/Appointments";
-
 import Account from "./pages/Account";
+import Sidebar from "@/components/Sidebar";
 
 const queryClient = new QueryClient();
 
-import Sidebar from "@/components/Sidebar";
 
 const App = () => {
-  const isLoggedIn = Boolean(localStorage.getItem("user"));
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  });
+  const [selectedRole, setSelectedRole] = useState<"patient" | "doctor">("patient");
+  const isLoggedIn = Boolean(user);
+  const role = isLoggedIn ? user?.role : selectedRole;
+
+  useEffect(() => {
+    const syncUser = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user") || "null"));
+      } catch {
+        setUser(null);
+      }
+    };
+    window.addEventListener("storage", syncUser);
+    return () => window.removeEventListener("storage", syncUser);
+  }, []);
+
+  useEffect(() => {
+    const syncUser = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user") || "null"));
+      } catch {
+        setUser(null);
+      }
+    };
+    window.addEventListener("focus", syncUser);
+    return () => window.removeEventListener("focus", syncUser);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -54,27 +65,38 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <div className="flex min-h-screen">
-            <Sidebar />
+            {isLoggedIn && <Sidebar key={user?.role} role={role} />}
             <main className="flex-1 w-full">
               <Routes>
                 <Route path="/" element={<Login />} />
-                {isLoggedIn ? (
+                {/* Patient onboarding only for registration, not login */}
+                {!isLoggedIn && (
+                  <>
+                    <Route path="/splash" element={<Splash />} />
+                    <Route path="/triage" element={<Triage />} />
+                  </>
+                )}
+                {/* Shared chat route */}
+                <Route path="/chat/:therapistId" element={<Chat />} />
+                {/* Doctor routes */}
+                {isLoggedIn && role === "doctor" && (
+                  <>
+                    <Route path="/doctor/details" element={<TherapistDetails />} />
+                    <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+                    <Route path="/doctor/appointments" element={<DoctorAppointments />} />
+                  </>
+                )}
+                {/* Patient routes */}
+                {isLoggedIn && role === "patient" && (
                   <>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/online-doctors" element={<OnlineDoctors />} />
                     <Route path="/appointments" element={<Appointments />} />
-                    <Route path="/chat/:therapistId" element={<Chat />} />
                     <Route path="/account" element={<Account />} />
-                    <Route path="*" element={<Dashboard />} />
-                  </>
-                ) : (
-                  <>
-                    <Route path="/" element={<Login />} />
-                    <Route path="/splash" element={<Splash />} />
-                    <Route path="/triage" element={<Triage />} />
-                    <Route path="*" element={<Login />} />
                   </>
                 )}
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
           </div>

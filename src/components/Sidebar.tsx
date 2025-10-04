@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 const navItems = [
   { path: "/dashboard", label: "Chatbot" },
   { path: "/online-doctors", label: "Online Doctors" },
@@ -9,11 +9,43 @@ const navItems = [
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-export default function Sidebar() {
+export default function Sidebar({ role, selectedRole }: { role?: "patient" | "doctor"; selectedRole?: "patient" | "doctor" }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isLoggedIn = Boolean(localStorage.getItem("user"));
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  });
+  const isLoggedIn = Boolean(user);
+  const effectiveRole = (isLoggedIn ? (role ?? user?.role) : selectedRole);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const syncUser = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user") || "null"));
+      } catch {
+        setUser(null);
+      }
+    };
+    window.addEventListener("storage", syncUser);
+    return () => window.removeEventListener("storage", syncUser);
+  }, []);
+
+  useEffect(() => {
+    const syncUser = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user") || "null"));
+      } catch {
+        setUser(null);
+      }
+    };
+    window.addEventListener("focus", syncUser);
+    return () => window.removeEventListener("focus", syncUser);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -24,40 +56,78 @@ export default function Sidebar() {
     navigate("/");
   };
 
-  // Sidebar content
-  const sidebarContent = (
-    <>
-      <h2 className="text-2xl font-bold mb-6">Secure Minds</h2>
-      <nav className="flex flex-col gap-2 flex-1">
-        {navItems.map(item => (
+  let sidebarContent;
+  if (effectiveRole === "doctor") {
+    sidebarContent = (
+      <>
+        <h2 className="text-2xl font-bold mb-6 text-blue-700">Doctor Panel</h2>
+        <nav className="flex flex-col gap-2 flex-1">
           <Link
-            key={item.path}
-            to={item.path}
-            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === item.path ? "bg-primary text-white" : "hover:bg-muted"}`}
+            to="/doctor/dashboard"
+            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/doctor/dashboard" ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"}`}
             onClick={() => setOpen(false)}
           >
-            {item.label}
+            Dashboard
           </Link>
-        ))}
-      </nav>
-      <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="border border-muted"
-          aria-label="Account"
-          onClick={() => navigate("/account")}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </Button>
-        {isLoggedIn ? (
-          <Button variant="outline" className="w-full" onClick={handleLogout}>Logout</Button>
-        ) : (
-          <Button variant="outline" className="w-full" onClick={handleLogin}>Login</Button>
-        )}
-      </div>
-    </>
-  );
+          <Link
+            to="/doctor/appointments"
+            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/doctor/appointments" ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"}`}
+            onClick={() => setOpen(false)}
+          >
+            Appointments
+          </Link>
+          <Link
+            to="/doctor/details"
+            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/doctor/details" ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"}`}
+            onClick={() => setOpen(false)}
+          >
+            Profile
+          </Link>
+        </nav>
+        <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
+          {isLoggedIn ? (
+            <Button variant="outline" className="w-full" onClick={handleLogout}>Logout</Button>
+          ) : (
+            <Button variant="outline" className="w-full" onClick={handleLogin}>Login</Button>
+          )}
+        </div>
+      </>
+    );
+  } else {
+    sidebarContent = (
+      <>
+        <h2 className="text-2xl font-bold mb-6">MindCare</h2>
+        <nav className="flex flex-col gap-2 flex-1">
+          {navItems.map(item => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === item.path ? "bg-primary text-white" : "hover:bg-muted"}`}
+              onClick={() => setOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="border border-muted"
+            aria-label="Account"
+            onClick={() => navigate("/account")}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </Button>
+          {isLoggedIn ? (
+            <Button variant="outline" className="w-full" onClick={handleLogout}>Logout</Button>
+          ) : (
+            <Button variant="outline" className="w-full" onClick={handleLogin}>Login</Button>
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -95,3 +165,4 @@ export default function Sidebar() {
     </>
   );
 }
+

@@ -25,7 +25,9 @@ export default function Login() {
       role,
     };
 
-    localStorage.setItem("user", JSON.stringify(user));
+  localStorage.setItem("user", JSON.stringify(user));
+  // Force update in App and Sidebar by dispatching a storage event
+  window.dispatchEvent(new Event("storage"));
 
     toast({
       title: "Bine ai venit!",
@@ -34,16 +36,19 @@ export default function Login() {
 
     // Redirect based on role
     if (role === "patient") {
-      navigate("/splash");
+      if (!isLogin) {
+        // Registration: show onboarding
+        navigate("/splash");
+      } else {
+        // Login: go directly to dashboard
+        navigate("/dashboard");
+      }
     } else if (role === "doctor") {
       if (!isLogin) {
         navigate("/doctor/details");
       } else {
         navigate("/doctor/dashboard");
       }
-      navigate("/dashboard");
-    } else if (role === "therapist") {
-      navigate("/therapist/dashboard");
     } else {
       navigate("/admin");
     }
@@ -117,22 +122,20 @@ export default function Login() {
               />
             </div>
 
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="role" className="font-semibold">
-                  Tipul contului
-                </Label>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
-                  className="w-full h-12 px-3 rounded-lg border bg-background text-base"
-                >
-                  <option value="patient">Pacient</option>
-                  <option value="doctor">Doctor</option>
-                </select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="role" className="font-semibold">
+                Tipul contului
+              </Label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value as "patient" | "doctor")}
+                className="w-full h-12 px-3 rounded-lg border bg-background text-base"
+              >
+                <option value="patient">Pacient</option>
+                <option value="doctor">Doctor</option>
+              </select>
+            </div>
 
             <Button
               type="submit"
