@@ -8,6 +8,33 @@ import Splash from "./pages/Splash";
 import Triage from "./pages/Triage";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
+import TherapistDetails from "./pages/TherapistDetails";
+import DoctorDashboard from "./pages/DoctorDashboard";
+import DoctorAppointments from "./pages/DoctorAppointments";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/splash" element={<Splash />} />
+          <Route path="/triage" element={<Triage />} />
+          <Route path="/chat/:therapistId" element={<Chat />} />
+          <Route path="/doctor/details" element={<TherapistDetails />} />
+          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+          <Route path="/doctor/appointments" element={<DoctorAppointments />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 import Dashboard from "./pages/Dashboard";
 import OnlineDoctors from "./pages/OnlineDoctors";
 import Appointments from "./pages/Appointments";
