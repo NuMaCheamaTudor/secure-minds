@@ -10,6 +10,39 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function Sidebar({ role, selectedRole }: { role?: "patient" | "doctor"; selectedRole?: "patient" | "doctor" }) {
+  // Submit handler for location
+  const handleSubmitLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!locationInput.trim()) {
+      setLocationError("Please enter a location.");
+      return;
+    }
+    // If input is coordinates, use directly. Otherwise, geocode city name.
+    if (locationInput.match(/^-?\d+\.\d+,\s*-?\d+\.\d+$/)) {
+      localStorage.setItem("locationInput", locationInput);
+      alert(`Location submitted: ${locationInput}`);
+      setLocationInput("");
+      setLocationError("");
+      return;
+    }
+    // Geocode city name using Nominatim
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(locationInput)}&limit=1`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (data.length > 0 && data[0].lat && data[0].lon) {
+        const coords = `${data[0].lat}, ${data[0].lon}`;
+        localStorage.setItem("locationInput", coords);
+        alert(`Location submitted: ${locationInput} (${coords})`);
+        setLocationInput("");
+        setLocationError("");
+      } else {
+        setLocationError("Could not find location. Please try a different city or address.");
+      }
+    } catch {
+      setLocationError("Error looking up location. Please try again.");
+    }
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(() => {
@@ -19,6 +52,26 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
       return null;
     }
   });
+  // Location state
+  const [locationInput, setLocationInput] = useState("");
+  const [locationError, setLocationError] = useState("");
+
+  // Geolocation handler
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocationInput(`${position.coords.latitude}, ${position.coords.longitude}`);
+        setLocationError("");
+      },
+      () => {
+        setLocationError("Unable to retrieve your location.");
+      }
+    );
+  };
   const isLoggedIn = Boolean(user);
   const effectiveRole = (isLoggedIn ? (role ?? user?.role) : selectedRole);
   const [open, setOpen] = useState(false);
@@ -84,7 +137,33 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
             Profile
           </Link>
         </nav>
-        <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
+        <div className="mt-auto flex flex-col gap-2 w-full justify-center">
+          {/* Location input section */}
+          <form className="flex flex-col gap-2 mb-2" onSubmit={handleSubmitLocation}>
+            <input
+              type="text"
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Type your location or use geolocation..."
+              value={locationInput}
+              onChange={e => setLocationInput(e.target.value)}
+            />
+            <Button
+              variant="secondary"
+              className="w-full"
+              type="button"
+              onClick={handleGeolocation}
+            >
+              Use my location
+            </Button>
+            <Button
+              variant="default"
+              className="w-full"
+              type="submit"
+            >
+              Submit Location
+            </Button>
+            {locationError && <span className="text-red-500 text-xs">{locationError}</span>}
+          </form>
           {isLoggedIn ? (
             <Button variant="outline" className="w-full" onClick={handleLogout}>Logout</Button>
           ) : (
@@ -108,15 +187,34 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
               {item.label}
             </Link>
           ))}
-          <Link
-            to="/splash"
-            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/splash" ? "bg-primary text-white" : "hover:bg-muted"}`}
-            onClick={() => setOpen(false)}
-          >
-            Onboarding
-          </Link>
         </nav>
-        <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
+        <div className="mt-auto flex flex-col gap-2 w-full justify-center">
+          {/* Location input section */}
+          <form className="flex flex-col gap-2 mb-2" onSubmit={handleSubmitLocation}>
+            <input
+              type="text"
+              className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Type your location or use geolocation..."
+              value={locationInput}
+              onChange={e => setLocationInput(e.target.value)}
+            />
+            <Button
+              variant="secondary"
+              className="w-full"
+              type="button"
+              onClick={handleGeolocation}
+            >
+              Use my location
+            </Button>
+            <Button
+              variant="default"
+              className="w-full"
+              type="submit"
+            >
+              Submit Location
+            </Button>
+            {locationError && <span className="text-red-500 text-xs">{locationError}</span>}
+          </form>
           <Button
             variant="ghost"
             size="icon"
