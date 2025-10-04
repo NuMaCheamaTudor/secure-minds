@@ -44,7 +44,6 @@ export default function Triage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!symptoms.trim()) {
       toast({
         title: "Completează formularul",
@@ -55,11 +54,24 @@ export default function Triage() {
     }
 
     setShowResults(true);
-    
     toast({
       title: "Am găsit specialiști pentru tine",
       description: "Iată câțiva terapeuți care te pot ajuta.",
     });
+
+    // After triage, redirect to dashboard based on role
+    setTimeout(() => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (user?.role === "doctor") {
+          navigate("/doctor/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
+      } catch {
+        navigate("/dashboard");
+      }
+    }, 1500);
   };
 
   if (showResults) {
