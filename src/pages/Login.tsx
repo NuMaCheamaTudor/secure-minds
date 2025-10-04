@@ -41,6 +41,11 @@ export default function Login() {
       } else {
         navigate("/doctor/dashboard");
       }
+      navigate("/dashboard");
+    } else if (role === "therapist") {
+      navigate("/therapist/dashboard");
+    } else {
+      navigate("/admin");
     }
   };
 

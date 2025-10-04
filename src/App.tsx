@@ -35,5 +35,53 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
 );
+import Dashboard from "./pages/Dashboard";
+import OnlineDoctors from "./pages/OnlineDoctors";
+import Appointments from "./pages/Appointments";
+
+import Account from "./pages/Account";
+
+const queryClient = new QueryClient();
+
+import Sidebar from "@/components/Sidebar";
+
+const App = () => {
+  const isLoggedIn = Boolean(localStorage.getItem("user"));
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main className="flex-1 w-full">
+              <Routes>
+                <Route path="/" element={<Login />} />
+                {isLoggedIn ? (
+                  <>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/online-doctors" element={<OnlineDoctors />} />
+                    <Route path="/appointments" element={<Appointments />} />
+                    <Route path="/chat/:therapistId" element={<Chat />} />
+                    <Route path="/account" element={<Account />} />
+                    <Route path="*" element={<Dashboard />} />
+                  </>
+                ) : (
+                  <>
+                    <Route path="/" element={<Login />} />
+                    <Route path="/splash" element={<Splash />} />
+                    <Route path="/triage" element={<Triage />} />
+                    <Route path="*" element={<Login />} />
+                  </>
+                )}
+              </Routes>
+            </main>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
