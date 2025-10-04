@@ -175,7 +175,7 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
   } else {
     sidebarContent = (
       <>
-        <h2 className="text-2xl font-bold mb-6">Secure Minds</h2>
+        <h2 className="text-2xl font-bold mb-6">RecoMED</h2>
         <nav className="flex flex-col gap-2 flex-1">
           {navItems.map(item => (
             <Link
