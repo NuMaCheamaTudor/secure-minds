@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const [prompt, setPrompt] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(true);
   const [response, setResponse] = useState("");
   const [showAppointments, setShowAppointments] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<number|null>(null);
@@ -43,6 +44,7 @@ export default function Dashboard() {
     } else {
       setResponse("Thank you for sharing. If you need advice or want to book an appointment, just let me know!");
     }
+    setPrompt("");
   };
 
   return (
@@ -59,28 +61,35 @@ export default function Dashboard() {
             />
             <Button type="submit" className="w-full">Submit</Button>
           </form>
-          <div className="mt-6">
-            <div className="font-semibold mb-2">Try these prompts:</div>
-            <div className="flex flex-wrap gap-2">
-              {["I want an appointment to the dentist", "Show me my appointments", "I want to talk to a doctor", "I feel anxious lately"].map((p, i) => (
-                <Button key={i} variant="outline" size="sm" onClick={() => setPrompt(p)}>{p}</Button>
-              ))}
-            </div>
-          </div>
-          {response && (
-            <div className="mt-4 p-4 bg-muted rounded-lg">
-              {response}
-              {response.includes("online doctor") && (
-                <Button className="mt-4 w-full" onClick={() => navigate("/online-doctors")}>Go to Online Doctors</Button>
-              )}
-              {response.includes("dentist appointment") && (
-                <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>Go to Appointments</Button>
-              )}
-              {response.includes("show your appointments") && (
-                <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>View Appointments</Button>
-              )}
-            </div>
-          )}
+            {showSuggestions && (
+              <div className="mt-6">
+                <div className="font-semibold mb-2">Try these prompts:</div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "I want an appointment to the dentist",
+                    "Show me my appointments",
+                    "I want to talk to a doctor",
+                    "I feel anxious lately"
+                  ].map((p, i) => (
+                    <Button key={i} variant="outline" size="sm" onClick={() => setPrompt(p)}>{p}</Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {response && (
+              <div className="mt-4 p-4 bg-muted rounded-lg">
+                {response}
+                {response.includes("online doctor") && (
+                  <Button className="mt-4 w-full" onClick={() => navigate("/online-doctors")}>Go to Online Doctors</Button>
+                )}
+                {response.includes("dentist appointment") && (
+                  <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>Go to Appointments</Button>
+                )}
+                {response.includes("show your appointments") && (
+                  <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>View Appointments</Button>
+                )}
+              </div>
+            )}
         </Card>
       </div>
     </div>
