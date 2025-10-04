@@ -96,7 +96,7 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
   } else {
     sidebarContent = (
       <>
-        <h2 className="text-2xl font-bold mb-6">MindCare</h2>
+        <h2 className="text-2xl font-bold mb-6">Secure Minds</h2>
         <nav className="flex flex-col gap-2 flex-1">
           {navItems.map(item => (
             <Link
@@ -108,6 +108,13 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
               {item.label}
             </Link>
           ))}
+          <Link
+            to="/splash"
+            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/splash" ? "bg-primary text-white" : "hover:bg-muted"}`}
+            onClick={() => setOpen(false)}
+          >
+            Onboarding
+          </Link>
         </nav>
         <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
           <Button

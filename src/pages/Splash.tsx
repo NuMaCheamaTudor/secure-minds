@@ -42,7 +42,7 @@ export default function Splash() {
       description: "Acum te vom ajuta să găsești specialistul potrivit.",
     });
     
-    navigate("/triage");
+  navigate("/triage");
   };
 
   const togglePref = (pref: string) => {
