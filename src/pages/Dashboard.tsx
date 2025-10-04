@@ -60,9 +60,9 @@ export default function Dashboard() {
             results = results.concat(data);
           } catch {}
         }
-        if (results.length > 0) {
-          setResponse("Here are medical places near you:");
-          setMedicalPlaces(results);
+            if (results.length > 0) {
+              setResponse("Here are medical places near you:");
+              setMedicalPlaces(results.slice(0, 5));
         } else {
           setResponse("No medical places found near your location.");
           setMedicalPlaces([]);
