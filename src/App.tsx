@@ -12,6 +12,8 @@ import Dashboard from "./pages/Dashboard";
 import OnlineDoctors from "./pages/OnlineDoctors";
 import Appointments from "./pages/Appointments";
 
+import Account from "./pages/Account";
+
 const queryClient = new QueryClient();
 
 import Sidebar from "@/components/Sidebar";
@@ -35,6 +37,7 @@ const App = () => {
                     <Route path="/online-doctors" element={<OnlineDoctors />} />
                     <Route path="/appointments" element={<Appointments />} />
                     <Route path="/chat/:therapistId" element={<Chat />} />
+                    <Route path="/account" element={<Account />} />
                     <Route path="*" element={<Dashboard />} />
                   </>
                 ) : (
