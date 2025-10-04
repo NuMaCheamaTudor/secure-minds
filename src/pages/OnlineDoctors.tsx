@@ -57,9 +57,9 @@ export default function OnlineDoctors() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/10 p-4">
       <div className="w-full max-w-2xl animate-fade-in">
-        <h1 className="text-3xl font-bold mb-4 text-center">Online Doctors</h1>
+        <h1 className="text-3xl font-bold mb-4 text-center">Doctori Online</h1>
         <Card className="p-6 mb-6">
-          <p className="mb-4">Here you can talk in real time with available doctors.</p>
+          <p className="mb-4">Aici poți vorbi în timp real cu doctorii disponibili.</p>
 
           <div className="grid gap-4">
             {doctors.map((doc) => (
@@ -99,11 +99,11 @@ export default function OnlineDoctors() {
 
                 {doc.status === "online" ? (
                   <Button size="sm" onClick={() => openChatInNewTab(doc)}>
-                    Start Chat
+                    Începe Chat
                   </Button>
                 ) : (
                   <Button size="sm" disabled>
-                    Unavailable
+                    Indisponibil
                   </Button>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { chatMedical, nearbyDoctors, ChatMsg } from "@/lib/chatApi";
+import { withPrice, formatPrice } from "@/lib/pricing";
 import { AlertTriangle, MapPin, Phone, Shield, Stethoscope, Calendar } from "lucide-react";
 
 export default function Dashboard() {
@@ -157,10 +158,13 @@ export default function Dashboard() {
         {nearby.length > 0 && (
           <Card className="p-3 mb-4">
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {nearby.map((p) => (
+              {withPrice(nearby, "consult").map((p) => (
                 <div key={p.id} className="rounded-lg border p-3">
                   <div className="font-medium">{p.name}</div>
                   {p.address && <div className="text-xs text-muted-foreground">{p.address}</div>}
+                  <div className="text-xs text-primary font-semibold mt-1">
+                    de la {formatPrice(p.priceRON)}
+                  </div>
                   <div className="flex items-center gap-2 text-xs mt-1">
                     <MapPin className="w-4 h-4" />
                     <a
@@ -186,12 +190,12 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {/* Top clinics for appointment */}
+        {/* Top clinici pentru programare */}
         {topClinics.length > 0 && (
           <Card className="p-3 mb-4">
             <div className="font-semibold mb-2">Top clinici pentru programare:</div>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {topClinics.map((c) => (
+              {withPrice(topClinics, "procedure").map((c) => (
                 <div key={c.id} className="rounded-lg border p-3">
                   <div className="font-medium">{c.name}</div>
                   {c.address && (
@@ -199,6 +203,9 @@ export default function Dashboard() {
                       <span className="font-semibold">Adresă:</span> {c.address}
                     </div>
                   )}
+                  <div className="text-xs text-primary font-semibold mt-1">
+                    ~ {formatPrice(c.priceRON)}
+                  </div>
                   <div className="flex items-center gap-2 text-xs mt-1">
                     <MapPin className="w-4 h-4" />
                     <a
