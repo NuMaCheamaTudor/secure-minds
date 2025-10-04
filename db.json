@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "role": "doctor",
+      "email": "demo.doctor@secureminds.local",
+      "password": "demo123",
+      "fullName": "Dr. Demo",
+      "specialty": "Psihoterapie",
+      "bio": "Lucrez cu anxietate și depresie.",
+      "phone": "+40 7xx xxx xxx",
+      "city": "București"
+    },
+    {
+      "id": 2,
+      "role": "patient",
+      "email": "demo.patient@secureminds.local",
+      "password": "demo123",
+      "fullName": "Pacient Demo"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // UI din proiectul tău (shadcn)
 import { Button } from "../components/ui/button";
@@ -48,7 +48,12 @@ export default function Splash() {
   const [consent, setConsent] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  // 👉 nextPath: dacă vii din înregistrare ca pacient, trimite către /dashboard
+  // altfel păstrează comportamentul vechi (/triage)
+  const nextPath = (location.state as any)?.next ?? "/dashboard";
 
   const steps = useMemo(
     () => [
@@ -63,14 +68,14 @@ export default function Splash() {
   );
   const total = steps.length;
 
-  // 🔁 map animație per pas (poți schimba ordinea cum vrei)
+  // 🔁 animație per pas
   const animByStep: object[] = [
-    mentalTherapy,     // step 0 – intro
-    doctorAndHealth,   // step 1 – comfort
-    medicineOnline,    // step 2 – comms
-    doctor,            // step 3 – context & tip specialist
-    healthInsurance,   // step 4 – safety & consent
-    doctorAndHealth,   // step 5 – review (sau altă preferată)
+    mentalTherapy,     // 0 – intro
+    doctorAndHealth,   // 1 – comfort
+    medicineOnline,    // 2 – comms
+    doctor,            // 3 – context & tip specialist
+    healthInsurance,   // 4 – safety & consent
+    doctorAndHealth,   // 5 – review
   ];
 
   const canGoNext = useMemo(() => {
@@ -94,6 +99,7 @@ export default function Splash() {
     }
     setStep((s) => Math.min(s + 1, total - 1));
   };
+
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
   const togglePref = (pref: string) => {
@@ -118,7 +124,9 @@ export default function Splash() {
     };
     localStorage.setItem("patientPreferences", JSON.stringify(preferences));
     toast({ title: "Preferințe salvate!", description: "Te ghidăm către specialistul potrivit." });
-    navigate("/triage");
+
+    // 🔀 redirecționează conform flow-ului
+    navigate(nextPath);
   };
 
   const variants = {
@@ -153,28 +161,24 @@ export default function Splash() {
             )}
           </div>
 
-          {/* indicator progres */}
+          {/* indicator progres – centrat */}
           <div className="mb-4">
-  <div className="flex items-center justify-between">
-    {/* Centrat */}
-    <div className="flex-1 flex justify-center gap-2">
-      {steps.map((_, idx) => (
-        <div
-          key={idx}
-          className={`h-2 rounded-full transition-all ${
-            idx <= step ? "bg-primary" : "bg-muted"
-          } ${idx === step ? "w-12" : "w-6"}`}
-        />
-      ))}
-    </div>
-
-    {/* Text la dreapta */}
-    <span className="ml-4 text-xs text-muted-foreground whitespace-nowrap">
-      Pasul {step + 1} / {total}
-    </span>
-  </div>
-</div>
-
+            <div className="flex items-center justify-between">
+              <div className="flex-1 flex justify-center gap-2">
+                {steps.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`h-2 rounded-full transition-all ${
+                      idx <= step ? "bg-primary" : "bg-muted"
+                    } ${idx === step ? "w-12" : "w-6"}`}
+                  />
+                ))}
+              </div>
+              <span className="ml-4 text-xs text-muted-foreground whitespace-nowrap">
+                Pasul {step + 1} / {total}
+              </span>
+            </div>
+          </div>
 
           {/* CARD – chestionar (fără animații pe textul de form) */}
           <Card className="calm-card overflow-hidden">

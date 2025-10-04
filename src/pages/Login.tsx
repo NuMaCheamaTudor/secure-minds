@@ -7,50 +7,101 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Heart } from "lucide-react";
 
+type Role = "patient" | "doctor";
+type StoredUser = {
+  id: string;
+  email: string;
+  password: string;
+  role: Role;
+  fullName?: string;
+};
+
+// -- helpers simple pe localStorage -----------------
+const USERS_KEY = "users";
+function readUsers(): StoredUser[] {
+  try {
+    return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+function writeUsers(users: StoredUser[]) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+function findByEmail(email: string) {
+  return readUsers().find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+}
+// ---------------------------------------------------
+
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"patient" | "doctor">("patient");
+  const [role, setRole] = useState<Role>("patient");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
 
-    // Mock authentication
-    const user = {
-      id: Math.random().toString(),
-      email,
-      role,
-    };
+    try {
+      if (isLogin) {
+        // --- AUTHENTICARE ---
+        const user = findByEmail(email);
+        if (!user) {
+          toast({ title: "Utilizator inexistent", variant: "destructive" });
+          return;
+        }
+        if (user.password !== password) {
+          toast({ title: "Parolă incorectă", variant: "destructive" });
+          return;
+        }
 
-  localStorage.setItem("user", JSON.stringify(user));
-  // Force update in App and Sidebar by dispatching a storage event
-  window.dispatchEvent(new Event("storage"));
+        // persistă sesiunea curentă
+        localStorage.setItem("user", JSON.stringify(user));
+        window.dispatchEvent(new Event("storage"));
 
-    toast({
-      title: "Bine ai venit!",
-      description: "Te-ai autentificat cu succes.",
-    });
+        toast({ title: "Bine ai revenit!" });
 
-    // Redirect based on role
-    if (role === "patient") {
-      if (!isLogin) {
-        // Registration: show onboarding
-        navigate("/splash");
+        if (user.role === "doctor") navigate("/doctor/dashboard");
+        else navigate("/dashboard");
       } else {
-        // Login: go directly to dashboard
-        navigate("/dashboard");
+        // --- ÎNREGISTRARE ---
+        const exists = findByEmail(email);
+        if (exists) {
+          toast({ title: "Email deja folosit", variant: "destructive" });
+          return;
+        }
+
+        const newUser: StoredUser = {
+          id: crypto.randomUUID(),
+          email,
+          password,
+          role,
+        };
+        const list = readUsers();
+        list.push(newUser);
+        writeUsers(list);
+
+        // auto-login după înregistrare
+        localStorage.setItem("user", JSON.stringify(newUser));
+        window.dispatchEvent(new Event("storage"));
+
+        toast({ title: "Cont creat cu succes!" });
+
+        // Flow-ul cerut
+        if (role === "patient") {
+          navigate("/splash", { state: { next: "/dashboard" } });
+        } else {
+          navigate("/doctor/details");
+        }
       }
-    } else if (role === "doctor") {
-      if (!isLogin) {
-        navigate("/doctor/details");
-      } else {
-        navigate("/doctor/dashboard");
-      }
-    } else {
-      navigate("/admin");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,9 +123,7 @@ export default function Login() {
             <button
               onClick={() => setIsLogin(true)}
               className={`flex-1 py-3 px-4 rounded-lg soft-transition font-semibold text-base ${
-                isLogin
-                  ? "bg-card shadow-md text-primary"
-                  : "hover:bg-card/50 text-muted-foreground"
+                isLogin ? "bg-card shadow-md text-primary" : "hover:bg-card/50 text-muted-foreground"
               }`}
             >
               Autentificare
@@ -82,9 +131,7 @@ export default function Login() {
             <button
               onClick={() => setIsLogin(false)}
               className={`flex-1 py-3 px-4 rounded-lg soft-transition font-semibold text-base ${
-                !isLogin
-                  ? "bg-card shadow-md text-primary"
-                  : "hover:bg-card/50 text-muted-foreground"
+                !isLogin ? "bg-card shadow-md text-primary" : "hover:bg-card/50 text-muted-foreground"
               }`}
             >
               Înregistrare
@@ -93,9 +140,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="font-semibold">
-                Email
-              </Label>
+              <Label htmlFor="email" className="font-semibold">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -108,9 +153,7 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="font-semibold">
-                Parolă
-              </Label>
+              <Label htmlFor="password" className="font-semibold">Parolă</Label>
               <Input
                 id="password"
                 type="password"
@@ -123,25 +166,21 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="role" className="font-semibold">
-                Tipul contului
-              </Label>
+              <Label htmlFor="role" className="font-semibold">Tipul contului</Label>
               <select
                 id="role"
                 value={role}
-                onChange={(e) => setRole(e.target.value as "patient" | "doctor")}
+                onChange={(e) => setRole(e.target.value as Role)}
                 className="w-full h-12 px-3 rounded-lg border bg-background text-base"
+                disabled={isLogin} // la login rolul este determinat de userul din baza de date
               >
                 <option value="patient">Pacient</option>
                 <option value="doctor">Doctor</option>
               </select>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold shadow-md"
-            >
-              {isLogin ? "Intră în cont" : "Creează cont"}
+            <Button type="submit" className="w-full h-12 text-base font-semibold shadow-md" disabled={loading}>
+              {loading ? "Se procesează..." : isLogin ? "Intră în cont" : "Creează cont"}
             </Button>
           </form>
 
