@@ -26,7 +26,7 @@ const App = () => {
         <BrowserRouter>
           <div className="flex min-h-screen">
             <Sidebar />
-            <div className="flex-1 ml-64">
+            <main className="flex-1 w-full">
               <Routes>
                 <Route path="/" element={<Login />} />
                 {isLoggedIn ? (
@@ -46,7 +46,7 @@ const App = () => {
                   </>
                 )}
               </Routes>
-            </div>
+            </main>
           </div>
         </BrowserRouter>
       </TooltipProvider>
