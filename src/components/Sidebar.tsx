@@ -10,39 +10,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function Sidebar({ role, selectedRole }: { role?: "patient" | "doctor"; selectedRole?: "patient" | "doctor" }) {
-  // Submit handler for location
-  const handleSubmitLocation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!locationInput.trim()) {
-      setLocationError("Please enter a location.");
-      return;
-    }
-    // If input is coordinates, use directly. Otherwise, geocode city name.
-    if (locationInput.match(/^-?\d+\.\d+,\s*-?\d+\.\d+$/)) {
-      localStorage.setItem("locationInput", locationInput);
-      alert(`Location submitted: ${locationInput}`);
-      setLocationInput("");
-      setLocationError("");
-      return;
-    }
-    // Geocode city name using Nominatim
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(locationInput)}&limit=1`;
-      const resp = await fetch(url);
-      const data = await resp.json();
-      if (data.length > 0 && data[0].lat && data[0].lon) {
-        const coords = `${data[0].lat}, ${data[0].lon}`;
-        localStorage.setItem("locationInput", coords);
-        alert(`Location submitted: ${locationInput} (${coords})`);
-        setLocationInput("");
-        setLocationError("");
-      } else {
-        setLocationError("Could not find location. Please try a different city or address.");
-      }
-    } catch {
-      setLocationError("Error looking up location. Please try again.");
-    }
-  };
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(() => {

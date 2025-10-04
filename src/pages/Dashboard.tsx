@@ -97,45 +97,28 @@ export default function Dashboard() {
             />
             <Button type="submit" className="w-full">Submit</Button>
           </form>
-            {showSuggestions && (
-              <div className="mt-6">
-                <div className="font-semibold mb-2">Try these prompts:</div>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "I want an appointment to the dentist",
-                    "Show me my appointments",
-                    "I want to talk to a doctor",
-                    "I feel anxious lately"
-                  ].map((p, i) => (
-                    <Button key={i} variant="outline" size="sm" onClick={() => setPrompt(p)}>{p}</Button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {response && (
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                {response}
-                {response.includes("online doctor") && (
-                  <Button className="mt-4 w-full" onClick={() => navigate("/online-doctors")}>Go to Online Doctors</Button>
-                )}
-                {response.includes("dentist appointment") && (
-                  <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>Go to Appointments</Button>
-                )}
-                {response.includes("show your appointments") && (
-                  <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>View Appointments</Button>
-                )}
-                {medicalPlaces.length > 0 && (
-                  <ul className="mt-4 space-y-2">
-                    {medicalPlaces.map((place, idx) => (
-                      <li key={idx} className="border rounded p-2 bg-white text-black">
-                        <div className="font-semibold">{place.display_name}</div>
-                        <div className="text-xs">Lat: {place.lat}, Lon: {place.lon}</div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
+          <div className="mt-6">
+            <div className="font-semibold mb-2">Try these prompts:</div>
+            <div className="flex flex-wrap gap-2">
+              {["I want an appointment to the dentist", "Show me my appointments", "I want to talk to a doctor", "I feel anxious lately"].map((p, i) => (
+                <Button key={i} variant="outline" size="sm" onClick={() => setPrompt(p)}>{p}</Button>
+              ))}
+            </div>
+          </div>
+          {response && (
+            <div className="mt-4 p-4 bg-muted rounded-lg">
+              {response}
+              {response.includes("online doctor") && (
+                <Button className="mt-4 w-full" onClick={() => navigate("/online-doctors")}>Go to Online Doctors</Button>
+              )}
+              {response.includes("dentist appointment") && (
+                <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>Go to Appointments</Button>
+              )}
+              {response.includes("show your appointments") && (
+                <Button className="mt-4 w-full" onClick={() => navigate("/appointments")}>View Appointments</Button>
+              )}
+            </div>
+          )}
         </Card>
       </div>
     </div>
