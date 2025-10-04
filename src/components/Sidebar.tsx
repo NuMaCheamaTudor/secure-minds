@@ -40,7 +40,16 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
-      <div className="mt-auto flex flex-col items-center">
+      <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="border border-muted"
+          aria-label="Account"
+          onClick={() => navigate("/account")}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </Button>
         {isLoggedIn ? (
           <Button variant="outline" className="w-full" onClick={handleLogout}>Logout</Button>
         ) : (
