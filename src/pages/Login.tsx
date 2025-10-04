@@ -34,7 +34,7 @@ export default function Login() {
     
     // Redirect based on role
     if (role === "patient") {
-      navigate("/splash");
+      navigate("/dashboard");
     } else if (role === "therapist") {
       navigate("/therapist/dashboard");
     } else {

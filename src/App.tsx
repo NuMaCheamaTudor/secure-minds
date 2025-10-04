@@ -8,26 +8,50 @@ import Splash from "./pages/Splash";
 import Triage from "./pages/Triage";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+import OnlineDoctors from "./pages/OnlineDoctors";
+import Appointments from "./pages/Appointments";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/splash" element={<Splash />} />
-          <Route path="/triage" element={<Triage />} />
-          <Route path="/chat/:therapistId" element={<Chat />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+import Sidebar from "@/components/Sidebar";
+
+const App = () => {
+  const isLoggedIn = Boolean(localStorage.getItem("user"));
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex-1 ml-64">
+              <Routes>
+                <Route path="/" element={<Login />} />
+                {isLoggedIn ? (
+                  <>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/online-doctors" element={<OnlineDoctors />} />
+                    <Route path="/appointments" element={<Appointments />} />
+                    <Route path="/chat/:therapistId" element={<Chat />} />
+                    <Route path="*" element={<Dashboard />} />
+                  </>
+                ) : (
+                  <>
+                    <Route path="/" element={<Login />} />
+                    <Route path="/splash" element={<Splash />} />
+                    <Route path="/triage" element={<Triage />} />
+                    <Route path="*" element={<Login />} />
+                  </>
+                )}
+              </Routes>
+            </div>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
