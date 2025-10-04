@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 type Doc = {
   id: number;
@@ -37,15 +38,20 @@ const doctors: Doc[] = [
 ];
 
 export default function OnlineDoctors() {
+  const navigate = useNavigate();
+
   const openChatInNewTab = (doc: Doc) => {
-    // Construim url-ul către ruta deja existentă în App.tsx: /chat/:therapistId
-    // Adăugăm și numele/specialitatea ca query params (opțional, pentru afișare în Chat)
     const url = new URL(`${window.location.origin}/chat/${doc.id}`);
     url.searchParams.set("name", doc.name);
     url.searchParams.set("specialty", doc.specialty);
-
-    // Deschidem într-un tab nou, în siguranță (noopener/noreferrer)
     window.open(url.toString(), "_blank", "noopener,noreferrer");
+  };
+
+  const goToDoctorProfile = (doc: Doc) => {
+    navigate(`/doctor/profile/${doc.id}`, {
+      state: { doctor: doc }, // trimitem datele către pagina de profil
+      replace: false,
+    });
   };
 
   return (
@@ -53,27 +59,35 @@ export default function OnlineDoctors() {
       <div className="w-full max-w-2xl animate-fade-in">
         <h1 className="text-3xl font-bold mb-4 text-center">Online Doctors</h1>
         <Card className="p-6 mb-6">
-          <p className="mb-4">
-            Here you can talk in real time with available doctors.
-          </p>
+          <p className="mb-4">Here you can talk in real time with available doctors.</p>
+
           <div className="grid gap-4">
             {doctors.map((doc) => (
               <div
                 key={doc.id}
-                className={`flex items-center gap-4 p-4 rounded-lg ${
-                  doc.status === "online" ? "bg-green-50" : "bg-muted"
+                className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
+                  doc.status === "online"
+                    ? "bg-green-50 hover:bg-green-100"
+                    : "bg-muted hover:bg-muted/80"
                 }`}
               >
+                {/* Click pe poză → profil */}
                 <img
                   src={doc.image}
                   alt={doc.name}
-                  className="w-16 h-16 rounded-full object-cover"
+                  onClick={() => goToDoctorProfile(doc)}
+                  className="w-16 h-16 rounded-full object-cover cursor-pointer border-2 border-transparent hover:border-primary transition-all"
                 />
-                <div className="flex-1">
-                  <div className="font-semibold">{doc.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {doc.specialty}
-                  </div>
+
+                {/* Click pe nume/descriere → profil */}
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => goToDoctorProfile(doc)}
+                  role="button"
+                  aria-label={`Open profile for ${doc.name}`}
+                >
+                  <div className="font-semibold hover:underline">{doc.name}</div>
+                  <div className="text-sm text-muted-foreground">{doc.specialty}</div>
                   <div
                     className={`text-xs mt-1 ${
                       doc.status === "online" ? "text-green-600" : "text-gray-400"
