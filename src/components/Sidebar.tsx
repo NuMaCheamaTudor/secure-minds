@@ -108,13 +108,6 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
               {item.label}
             </Link>
           ))}
-          <Link
-            to="/splash"
-            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/splash" ? "bg-primary text-white" : "hover:bg-muted"}`}
-            onClick={() => setOpen(false)}
-          >
-            Onboarding
-          </Link>
         </nav>
         <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
           <Button
