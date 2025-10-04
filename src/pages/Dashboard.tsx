@@ -292,17 +292,4 @@ export default function Dashboard() {
     </div>
   );
 }
-                  onClick={() => navigate("/appointments")}
-                  className="flex items-center gap-1"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Programează-te
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
-      </div>
-    </div>
-  );
-}
+       
