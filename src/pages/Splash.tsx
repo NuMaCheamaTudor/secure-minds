@@ -24,9 +24,9 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 
 // Grafica & animații
-import LottieHeroStep from "../components/graphics/LottieHeroStep";
-import LottieBadge from "../components/graphics/LottieBadge";
-import AnimatedBlobs from "../components/graphics/AnimatedBlobs";
+import LottieHeroStep from "../components/Graphics/LottieHeroStep";
+import LottieBadge from "../components/Graphics/LottieBadge";
+import AnimatedBlobs from "../components/Graphics/AnimatedBlobs";
 
 // Lottie data – EXACT din src/assets/loottie (nume cu spații)
 import doctorAndHealth from "../assets/loottie/Doctor and health symbols.json";
@@ -41,6 +41,9 @@ import ShinyButton from "../components/ui/ShinyButton";
 
 export default function Splash() {
   const [step, setStep] = useState(0);
+  const [city, setCity] = useState("");
+  const [coords, setCoords] = useState<{lat: number; lng: number} | null>(null);
+  const [locError, setLocError] = useState("");
   const [anxietyLevel, setAnxietyLevel] = useState([3]);
   const [communicationPrefs, setCommunicationPrefs] = useState<string[]>(["chat"]);
   const [visitPurpose, setVisitPurpose] = useState("");
@@ -57,12 +60,13 @@ export default function Splash() {
 
   const steps = useMemo(
     () => [
-      { key: "intro", title: "Bine ai venit!", subtitle: "Pornim încet, blând, cu pași mici." },
-      { key: "comfort", title: "Cum te simți când discuți cu specialiști?", subtitle: "Alege nivelul tău de confort." },
-      { key: "comms", title: "Cum preferi să comunici?", subtitle: "Poți selecta una sau mai multe opțiuni." },
-      { key: "context", title: "Spune-ne pe scurt ce te aduce aici", subtitle: "Vom sugera medicul sau terapeutul potrivit." },
-      { key: "safety", title: "Siguranța ta este prioritară", subtitle: "Câteva informații importante înainte de a continua." },
-      { key: "review", title: "Gata!", subtitle: "Revizuiește, apoi începem triajul." },
+  { key: "intro", title: "Bine ai venit!", subtitle: "Pornim încet, blând, cu pași mici." },
+  { key: "location", title: "Unde te afli?", subtitle: "Alege orașul sau folosește locația ta pentru recomandări." },
+  { key: "comfort", title: "Cum te simți când discuți cu specialiști?", subtitle: "Alege nivelul tău de confort." },
+  { key: "comms", title: "Cum preferi să comunici?", subtitle: "Poți selecta una sau mai multe opțiuni." },
+  { key: "context", title: "Spune-ne pe scurt ce te aduce aici", subtitle: "Vom sugera medicul sau terapeutul potrivit." },
+  { key: "safety", title: "Siguranța ta este prioritară", subtitle: "Câteva informații importante înainte de a continua." },
+  { key: "review", title: "Gata!", subtitle: "Revizuiește, apoi începem triajul." },
     ],
     []
   );
@@ -79,7 +83,8 @@ export default function Splash() {
   ];
 
   const canGoNext = useMemo(() => {
-    if (step === 1) return anxietyLevel[0] >= 1;
+  if (step === 1) return city.length > 0 || coords !== null;
+  if (step === 2) return anxietyLevel[0] >= 1;
     if (step === 2) return communicationPrefs.length > 0;
     if (step === 3) return true;
     if (step === 4) return consent;
@@ -115,6 +120,12 @@ export default function Splash() {
       });
       return;
     }
+    if (city.length > 0) {
+      localStorage.setItem("user_city", city);
+    }
+    if (coords) {
+      localStorage.setItem("user_coords", JSON.stringify(coords));
+    }
     const preferences = {
       comfortLevel: anxietyLevel[0],
       communicationPrefs,
@@ -124,7 +135,6 @@ export default function Splash() {
     };
     localStorage.setItem("patientPreferences", JSON.stringify(preferences));
     toast({ title: "Preferințe salvate!", description: "Te ghidăm către specialistul potrivit." });
-
     // 🔀 redirecționează conform flow-ului
     navigate(nextPath);
   };
@@ -208,6 +218,47 @@ export default function Splash() {
                 )}
 
                 {step === 1 && (
+                  <motion.div key="location" variants={variants} initial="initial" animate="animate" exit="exit">
+                    <div className="space-y-4">
+                      <Label className="text-base">Alege orașul sau folosește locația ta</Label>
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          value={city}
+                          onChange={e => setCity(e.target.value)}
+                          placeholder="Introdu orașul..."
+                          className="w-1/2 p-2 border rounded"
+                        />
+                        <button
+                          type="button"
+                          className="p-2 border rounded bg-muted"
+                          onClick={() => {
+                            if (!navigator.geolocation) {
+                              setLocError("Geolocation is not supported by your browser.");
+                              return;
+                            }
+                            navigator.geolocation.getCurrentPosition(
+                              (pos) => {
+                                setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                setLocError("");
+                              },
+                              (err) => {
+                                setLocError("Could not get location: " + err.message);
+                              }
+                            );
+                          }}
+                        >Folosește locația mea</button>
+                      </div>
+                      {coords && (
+                        <div className="text-sm text-muted-foreground">Coordonate detectate: {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}</div>
+                      )}
+                      {locError && (
+                        <div className="text-sm text-red-500">{locError}</div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+                {step === 2 && (
                   <motion.div key="comfort" variants={variants} initial="initial" animate="animate" exit="exit">
                     <div className="space-y-4">
                       <Label className="text-base">Cum te simți în legătură cu interacțiunea cu specialiști?</Label>

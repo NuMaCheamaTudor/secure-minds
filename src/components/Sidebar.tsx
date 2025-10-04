@@ -10,6 +10,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function Sidebar({ role, selectedRole }: { role?: "patient" | "doctor"; selectedRole?: "patient" | "doctor" }) {
+  const [showLocationInput, setShowLocationInput] = useState(false);
+  const [newCity, setNewCity] = useState("");
+  const [locError, setLocError] = useState("");
+  const [coords, setCoords] = useState<{lat: number; lng: number} | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(() => {
@@ -48,8 +52,10 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/");
+  localStorage.removeItem("user");
+  window.dispatchEvent(new Event("storage")); // Notify parent to update
+  setOpen(false); // Hide sidebar
+  navigate("/");
   };
 
   const handleLogin = () => {
@@ -108,14 +114,63 @@ export default function Sidebar({ role, selectedRole }: { role?: "patient" | "do
               {item.label}
             </Link>
           ))}
-          <Link
-            to="/splash"
-            className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/splash" ? "bg-primary text-white" : "hover:bg-muted"}`}
-            onClick={() => setOpen(false)}
-          >
-            Onboarding
-          </Link>
+          {/* Only show Onboarding for non-pacient roles */}
+          {effectiveRole !== "patient" && (
+            <Link
+              to="/splash"
+              className={`py-2 px-4 rounded-lg transition-colors font-medium ${location.pathname === "/splash" ? "bg-primary text-white" : "hover:bg-muted"}`}
+              onClick={() => setOpen(false)}
+            >
+              Onboarding
+            </Link>
+          )}
         </nav>
+        {/* Location change button for pacient */}
+        {effectiveRole === "patient" && (
+          <div className="mb-4">
+            <Button variant="outline" className="w-full" onClick={() => setShowLocationInput(v => !v)}>
+              Change Location
+            </Button>
+            {showLocationInput && (
+              <div className="mt-2 p-2 border rounded bg-muted">
+                <input
+                  type="text"
+                  value={newCity}
+                  onChange={e => setNewCity(e.target.value)}
+                  placeholder="Enter new city..."
+                  className="w-full mb-2 p-2 border rounded"
+                />
+                <Button type="button" className="mb-2 w-full" onClick={() => {
+                  if (newCity.length > 0) {
+                    localStorage.setItem("user_city", newCity);
+                    setShowLocationInput(false);
+                  }
+                }}>
+                  Save City
+                </Button>
+                <Button type="button" className="w-full" onClick={() => {
+                  if (!navigator.geolocation) {
+                    setLocError("Geolocation is not supported by your browser.");
+                    return;
+                  }
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      localStorage.setItem("user_coords", JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
+                      setShowLocationInput(false);
+                      setLocError("");
+                    },
+                    (err) => {
+                      setLocError("Could not get location: " + err.message);
+                    }
+                  );
+                }}>
+                  Use My Location
+                </Button>
+                {locError && <div className="text-sm text-red-500 mt-2">{locError}</div>}
+              </div>
+            )}
+          </div>
+        )}
         <div className="mt-auto flex flex-row items-center gap-2 w-full justify-center">
           <Button
             variant="ghost"
