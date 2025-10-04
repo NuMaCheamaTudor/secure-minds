@@ -19,6 +19,9 @@ import Appointments from "./pages/Appointments";
 import Account from "./pages/Account";
 import Sidebar from "@/components/Sidebar";
 
+// ⬇️ NOU
+import DoctorProfile from "./pages/DoctorProfile";
+
 const queryClient = new QueryClient();
 
 function AppShell() {
@@ -64,12 +67,16 @@ function AppShell() {
           <Route path="/splash" element={<Splash />} />
           <Route path="/triage" element={<Triage />} />
 
+          {/* Profil public doctor (pentru pacienți) — NOU */}
+          <Route path="/doctor/profile/:id" element={<DoctorProfile />} />
+
           {/* Shared chat */}
           <Route path="/chat/:therapistId" element={<Chat />} />
 
           {/* Doctor */}
           {isLoggedIn && role === "doctor" && (
             <>
+              {/* Editare profil medic (self-edit) */}
               <Route path="/doctor/details" element={<TherapistDetails />} />
               <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
               <Route path="/doctor/appointments" element={<DoctorAppointments />} />
