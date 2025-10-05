@@ -8,6 +8,7 @@ import { withPrice, formatPrice } from "@/lib/pricing";
 import { AlertTriangle, MapPin, Phone, Shield, Stethoscope, Calendar } from "lucide-react";
 
 export default function Dashboard() {
+  type ChatItem = ChatMsg & { custom?: React.ReactNode };
   const [messages, setMessages] = useState<ChatMsg[]>([
     {
       role: "assistant",
@@ -25,6 +26,7 @@ export default function Dashboard() {
     { id: string; name: string; address?: string | null; phone?: string | null; lat: number; lon: number }[]
   >([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  
 
   const endRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -44,11 +46,54 @@ export default function Dashboard() {
     setInput("");
     setLoading(true);
 
-    // Check for "appointment" keyword
-    if (/appointment/i.test(content)) {
-      // Helper to fetch clinics and update state
-      const fetchClinics = async (lat: number, lon: number) => {
-        try {
+
+    if (/programare/i.test(content)) {
+  // Simulăm clinici disponibile
+  const demoClinics = [
+    { id: 1, name: "Clinica Sanador", address: "Bd. Victoriei 12", priceRON: 200 },
+    { id: 2, name: "Regina Maria", address: "Str. Dorobanți 45", priceRON: 180 },
+    { id: 3, name: "MedLife", address: "Calea Floreasca 55", priceRON: 210 },
+  ];
+
+  const clinicsCards = (
+    <div className="space-y-2">
+      <div className="font-semibold mb-1">Clinici disponibile pentru programare:</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {demoClinics.map((c) => (
+          <Card key={c.id} className="p-3 text-sm">
+            <div className="font-medium">{c.name}</div>
+            <div className="text-xs text-muted-foreground">{c.address}</div>
+            <div className="text-xs text-primary font-semibold mt-1">
+              de la {formatPrice(c.priceRON)}
+            </div>
+            <Button
+              size="sm"
+              className="mt-2 w-full"
+              onClick={() => navigate("/appointments")}
+            >
+              Programează-te
+            </Button>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  setMessages((prev) => [
+    ...prev,
+    
+    { role: "assistant", content: "Uite câteva clinici recomandate pentru programare:", custom: clinicsCards },
+  ]);
+  setInput("");
+  setLoading(false);
+  return;
+}
+
+// Check for "appointment" keyword
+if (/appointment/i.test(content)) {
+  // Helper to fetch clinics and update state
+  const fetchClinics = async (lat: number, lon: number) => {
+    try {
           const data = await nearbyDoctors(lat, lon);
           const clinics = data.results.slice(0, 5);
           setTopClinics(clinics);
@@ -72,9 +117,13 @@ export default function Dashboard() {
         // fallback: Bucharest coordinates
         fetchClinics(44.4268, 26.1025);
       }
+
+
     } else {
       setTopClinics([]);
     }
+
+
 
     try {
       // nu retrimitem primul mesaj (intro assistant) către API
@@ -235,16 +284,21 @@ export default function Dashboard() {
         <Card className="p-4 h-[60vh] overflow-auto">
           <div className="space-y-3">
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm shadow ${
-                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border"
-                  }`}
-                >
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`max-w-[80%] rounded-xl px-3 py-2 text-sm shadow ${
+                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border"
+                }`}
+              >
+                {m.custom ? (
+                  <div>{m.custom}</div>
+                ) : (
                   <div className="prose prose-sm max-w-none whitespace-pre-wrap">{m.content}</div>
-                </div>
+                )}
               </div>
-            ))}
+            </div>
+          ))}
+
             {loading && <div className="text-xs text-muted-foreground">Se scrie…</div>}
             <div ref={endRef} />
           </div>
