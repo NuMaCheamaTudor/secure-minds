@@ -106,3 +106,5 @@ app.get("/api/nearby", async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`API up on http://localhost:${PORT}`));
+
+//smecher si ciumeg
