@@ -69,7 +69,7 @@ export default function Dashboard() {
             <Button
               size="sm"
               className="mt-2 w-full"
-              onClick={() => navigate("/appointments")}
+              onClick={() => navigate("/Tratamente")}
             >
               Programează-te
             </Button>
