@@ -1,122 +1,94 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Menu,
-  X,
-  MessageCircle,
-  Stethoscope,
-  Calendar,
-  User,
-  LayoutDashboard,
-  LogOut,
-} from "lucide-react";
+import { Menu, X, Home, Calendar, User, Stethoscope, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface HamburgerMenuProps {
-  role: "patient" | "doctor";
-}
+type Props = {
+  role: "patient" | "doctor" | undefined;
+};
 
-export default function HamburgerMenu({ role }: HamburgerMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+export default function HamburgerMenu({ role = "patient" }: Props) {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.dispatchEvent(new Event("storage"));
-    navigate("/", { replace: true });
-    setIsOpen(false);
-  };
+  const close = () => setOpen(false);
 
-  const patientLinks = [
-    { to: "/dashboard", icon: MessageCircle, label: "Chatbot" },
-    { to: "/online-doctors", icon: Stethoscope, label: "Doctori Online" },
-    { to: "/appointments", icon: Calendar, label: "Programări" },
-    { to: "/account", icon: User, label: "Cont" },
+  const patientItems = [
+    { to: "/dashboard", label: "Dashboard", icon: Home },
+    { to: "/online-doctors", label: "Doctori online", icon: Stethoscope },
+    { to: "/appointments", label: "Programări", icon: Calendar },
+    { to: "/tratamente", label: "Tratamente", icon: ClipboardList }, // 👈 NOU
+    { to: "/account", label: "Contul meu", icon: User },
   ];
 
-  const doctorLinks = [
-    { to: "/doctor/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/doctor/appointments", icon: Calendar, label: "Programări" },
-    { to: "/doctor/details", icon: User, label: "Profil" },
+  const doctorItems = [
+    { to: "/doctor/dashboard", label: "Dashboard", icon: Home },
+    { to: "/doctor/appointments", label: "Programări", icon: Calendar },
+    { to: "/doctor/details", label: "Editează profil", icon: User },
   ];
 
-  const links = role === "patient" ? patientLinks : doctorLinks;
+  const items = role === "doctor" ? doctorItems : patientItems;
 
   return (
     <>
-      {/* Hamburger Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={isOpen ? "Închide meniu" : "Deschide meniu"}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </Button>
-
-      {/* Overlay */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 z-40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* Topbar */}
+      <div className="w-full h-14 border-b flex items-center px-3 gap-3 bg-background/80 backdrop-blur sticky top-0 z-30">
+        <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="Deschide meniul">
+          <Menu className="w-5 h-5" />
+        </Button>
+        <div className="font-semibold">MindCare</div>
+      </div>
 
       {/* Drawer */}
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed top-0 left-0 h-full w-64 bg-card border-r shadow-xl z-40 flex flex-col"
-            initial={{ x: -300 }}
-            animate={{ x: 0 }}
-            exit={{ x: -300 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          >
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-bold text-primary">MindCare</h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                {role === "patient" ? "Pacient" : "Doctor"}
-              </p>
-            </div>
+        {open && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/30 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={close}
+            />
+            <motion.aside
+              className="fixed left-0 top-0 bottom-0 w-72 bg-card border-r z-50 p-3 flex flex-col"
+              initial={{ x: -320 }}
+              animate={{ x: 0 }}
+              exit={{ x: -320 }}
+              transition={{ type: "spring", stiffness: 320, damping: 30 }}
+            >
+              <div className="flex items-center justify-between h-12">
+                <div className="font-semibold">Meniu</div>
+                <Button variant="ghost" size="icon" onClick={close} aria-label="Închide meniul">
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
 
-            <nav className="flex-1 p-4 space-y-2">
-              {links.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setIsOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                      isActive
-                        ? "bg-primary text-primary-foreground font-medium"
-                        : "hover:bg-muted"
-                    }`
-                  }
-                >
-                  <link.icon className="w-5 h-5" />
-                  <span>{link.label}</span>
-                </NavLink>
-              ))}
-            </nav>
+              <nav className="mt-2 space-y-1">
+                {items.map(({ to, label, icon: Icon }) => {
+                  const active = location.pathname === to;
+                  return (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      onClick={close}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                        active ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{label}</span>
+                    </NavLink>
+                  );
+                })}
+              </nav>
 
-            <div className="p-4 border-t">
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Deconectare</span>
-              </Button>
-            </div>
-          </motion.div>
+              <div className="mt-auto p-2 text-xs text-muted-foreground">
+                © {new Date().getFullYear()} MindCare
+              </div>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
     </>
