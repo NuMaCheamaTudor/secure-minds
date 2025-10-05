@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "id": 1,
+      "id": "1",
       "role": "doctor",
       "email": "demo.doctor@secureminds.local",
       "password": "demo123",
@@ -12,11 +12,28 @@
       "city": "București"
     },
     {
-      "id": 2,
+      "id": "2",
       "role": "patient",
       "email": "demo.patient@secureminds.local",
       "password": "demo123",
       "fullName": "Pacient Demo"
+    },
+    {
+      "id": "02d1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Salut!"
+        },
+        {
+          "role": "assistant",
+          "content": "Îmi pare rău, a apărut o eroare la conversație. Încearcă din nou puțin mai târziu."
+        },
+        {
+          "role": "user",
+          "content": "Salut"
+        }
+      ]
     }
   ]
 }
