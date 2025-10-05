@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, RefreshCcw, Percent, Info } from "lucide-react";
+import { MapPin, RefreshCcw, Percent, Info, Calendar, Clock, X } from "lucide-react";
 
 /** Tipuri de date */
 type Hospital = {
@@ -12,19 +12,27 @@ type Hospital = {
   distanceKm?: number;
   priceRON?: number;
   hasDiscount?: boolean;
-  discountPercent?: number; // ex: 10 = -10%
-  mapsQuery?: string; // pentru link “Vezi pe hartă”
+  discountPercent?: number;
+  mapsQuery?: string;
 };
 
 type Treatment = {
   id: string;
   name: string;
-  provider: string; // spital/clinică
+  provider: string;
   distanceKm?: number;
   priceRON?: number;
   hasDiscount?: boolean;
   discountPercent?: number;
   mapsQuery?: string;
+};
+
+type AppointmentForm = {
+  serviceName: string;
+  provider: string;
+  date: string;
+  time: string;
+  notes: string;
 };
 
 /** Utilitare – generator determinist de prețuri / reduceri (mock) */
@@ -50,9 +58,7 @@ const mockPrice = (name: string, min: number, max: number) => {
 
 const maybeDiscount = (name: string): { hasDiscount: boolean; percent: number } => {
   const r = seededRandom(name + "::discount");
-  // ~30% șanse să afișăm discount
   const has = r > 0.7;
-  // 5–25% reducere
   const percent = has ? (5 + Math.round(seededRandom(name + "::p") * 20)) : 0;
   return { hasDiscount: has, percent };
 };
@@ -61,13 +67,13 @@ const maybeDiscount = (name: string): { hasDiscount: boolean; percent: number } 
 const ron = (n: number) =>
   new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(n);
 
-const km = (d?: number) => (d == null ? "—" : `${d.toFixed(1)} km`);
+const km = (d?: number) => (d == null ? "–" : `${d.toFixed(1)} km`);
 
 /** Link Google Maps */
 const mapsUrl = (q?: string) =>
   q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : undefined;
 
-/** Mock “API” spitale – în realitate ai schimba cu fetch(...) */
+/** Mock "API" spitale */
 async function fetchNearbyHospitals(lat: number, lng: number): Promise<Hospital[]> {
   await new Promise((r) => setTimeout(r, 650));
 
@@ -95,7 +101,6 @@ async function fetchNearbyHospitals(lat: number, lng: number): Promise<Hospital[
     },
   ];
 
-  // adaugăm preț și discount (mock) dacă lipsesc
   return base.map((h) => {
     const price = h.priceRON ?? mockPrice(h.name, 180, 500);
     const d = maybeDiscount(h.name);
@@ -108,7 +113,7 @@ async function fetchNearbyHospitals(lat: number, lng: number): Promise<Hospital[
   });
 }
 
-/** Mock “API” tratamente – filtru după lat/lng în real life */
+/** Mock "API" tratamente */
 async function fetchNearbyTreatments(lat: number, lng: number): Promise<Treatment[]> {
   await new Promise((r) => setTimeout(r, 700));
 
@@ -137,7 +142,6 @@ async function fetchNearbyTreatments(lat: number, lng: number): Promise<Treatmen
   ];
 
   return base.map((t) => {
-    // generăm prețul în funcție de tipul tratamentului
     let min = 150;
     let max = 450;
     if (/detartraj|stoma/i.test(t.name)) {
@@ -190,6 +194,111 @@ function PriceTag({
   return <span className="font-semibold text-primary">{ron(priceRON)}</span>;
 }
 
+/** Popup pentru programare */
+function AppointmentPopup({
+  isOpen,
+  onClose,
+  serviceName,
+  provider,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  serviceName: string;
+  provider: string;
+  onSubmit: (data: AppointmentForm) => void;
+}) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const handleSubmit = () => {
+    onSubmit({
+      serviceName,
+      provider,
+      date,
+      time,
+      notes,
+    });
+    setDate("");
+    setTime("");
+    setNotes("");
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md p-6 relative animate-fade-in">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-4 right-4"
+          onClick={onClose}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+
+        <h2 className="text-2xl font-bold mb-4">Programează-te</h2>
+
+        <div className="space-y-4">
+          <div className="p-3 bg-muted rounded-md">
+            <div className="font-semibold">{serviceName}</div>
+            <div className="text-sm text-muted-foreground">{provider}</div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium flex items-center gap-2 mb-1">
+                <Calendar className="w-4 h-4" />
+                Dată
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md bg-background"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium flex items-center gap-2 mb-1">
+                <Clock className="w-4 h-4" />
+                Oră
+              </label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md bg-background"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium block mb-1">Notițe (opțional)</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Mențiuni speciale sau informații adiționale..."
+              className="w-full px-3 py-2 border rounded-md bg-background min-h-[80px]"
+            />
+          </div>
+
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={onClose}>
+              Anulează
+            </Button>
+            <Button onClick={handleSubmit}>
+              Confirmă Programarea
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function Tratamente() {
   const { toast } = useToast();
 
@@ -197,13 +306,21 @@ export default function Tratamente() {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [activeTab, setActiveTab] = useState<"hospitals" | "treatments">("hospitals");
+  const [appointmentPopup, setAppointmentPopup] = useState<{
+    isOpen: boolean;
+    serviceName: string;
+    provider: string;
+  }>({
+    isOpen: false,
+    serviceName: "",
+    provider: "",
+  });
 
   /** Obține locația + datele din apropiere */
   const fetchAll = (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
 
     if (!navigator.geolocation) {
-      // Fallback: mock dacă geolocația nu e disponibilă
       Promise.all([fetchNearbyHospitals(0, 0), fetchNearbyTreatments(0, 0)]).then(([hs, ts]) => {
         setHospitals(hs.map((h) => ({ ...h, distanceKm: undefined })));
         setTreatments(ts.map((t) => ({ ...t, distanceKm: undefined })));
@@ -256,6 +373,56 @@ export default function Tratamente() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const openAppointmentPopup = (serviceName: string, provider: string) => {
+    setAppointmentPopup({
+      isOpen: true,
+      serviceName,
+      provider,
+    });
+  };
+
+  const closeAppointmentPopup = () => {
+    setAppointmentPopup({
+      isOpen: false,
+      serviceName: "",
+      provider: "",
+    });
+  };
+
+  const handleAppointmentSubmit = (data: AppointmentForm) => {
+    if (!data.date || !data.time) {
+      toast({
+        title: "Eroare",
+        description: "Te rog completează data și ora programării.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Salvăm programarea în localStorage
+    const existingAppointments = JSON.parse(localStorage.getItem("appointments") || "[]");
+    const newAppointment = {
+      id: Date.now(), // ID unic bazat pe timestamp
+      type: data.serviceName,
+      doctor: data.provider,
+      date: data.date,
+      time: data.time,
+      location: data.provider,
+    };
+    
+    const updatedAppointments = [...existingAppointments, newAppointment];
+    localStorage.setItem("appointments", JSON.stringify(updatedAppointments));
+    
+    // Declanșăm un event pentru a notifica componenta Appointments
+    window.dispatchEvent(new Event("storage"));
+
+    toast({
+      title: "Programare confirmată!",
+      description: `Programarea ta la ${data.provider} pe ${data.date} la ora ${data.time} a fost confirmată.`,
+    });
+    closeAppointmentPopup();
+  };
+
   const hasResults = useMemo(() => {
     if (activeTab === "hospitals") return hospitals.length > 0;
     return treatments.length > 0;
@@ -292,7 +459,7 @@ export default function Tratamente() {
             <Info className="w-5 h-5 mt-0.5 text-primary" />
             <p className="text-sm text-muted-foreground">
               Prețurile afișate sunt orientative. Dacă un preț nu este disponibil public, afișăm un preț
-              „mock” estimativ. Poți verifica detaliile finale direct la clinică.
+              „mock" estimativ. Poți verifica detaliile finale direct la clinică.
             </p>
           </div>
         </Card>
@@ -322,15 +489,23 @@ export default function Tratamente() {
                       <span>{km(h.distanceKm)}</span>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right space-y-2">
                     <PriceTag priceRON={h.priceRON} hasDiscount={h.hasDiscount} discountPercent={h.discountPercent} />
-                    {url && (
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-2">
-                        <Button size="sm" variant="outline">
-                          Vezi pe hartă
-                        </Button>
-                      </a>
-                    )}
+                    <div className="flex gap-2">
+                      {url && (
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" variant="outline">
+                            Vezi pe hartă
+                          </Button>
+                        </a>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => openAppointmentPopup("Consultație", h.name)}
+                      >
+                        Programează-te
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               );
@@ -352,25 +527,42 @@ export default function Tratamente() {
                       <span>{km(t.distanceKm)}</span>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right space-y-2">
                     <PriceTag
                       priceRON={t.priceRON}
                       hasDiscount={t.hasDiscount}
                       discountPercent={t.discountPercent}
                     />
-                    {url && (
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-2">
-                        <Button size="sm" variant="outline">
-                          Vezi pe hartă
-                        </Button>
-                      </a>
-                    )}
+                    <div className="flex gap-2">
+                      {url && (
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" variant="outline">
+                            Vezi pe hartă
+                          </Button>
+                        </a>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => openAppointmentPopup(t.name, t.provider)}
+                      >
+                        Programează-te
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               );
             })}
           </div>
         )}
+
+        {/* Popup pentru programare */}
+        <AppointmentPopup
+          isOpen={appointmentPopup.isOpen}
+          onClose={closeAppointmentPopup}
+          serviceName={appointmentPopup.serviceName}
+          provider={appointmentPopup.provider}
+          onSubmit={handleAppointmentSubmit}
+        />
       </div>
     </div>
   );
